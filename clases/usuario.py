@@ -1,13 +1,14 @@
 import re
 
 class Usuario:
-    usuarios = []  # Lista para almacenar usuarios registrados
+    usuarios = []  # Lista de usuarios registrados
 
     def __init__(self, id_usuario, nombre_usuario, correo_electronico, contrasena):
         self.id_usuario = id_usuario
         self.nombre_usuario = nombre_usuario
         self.correo_electronico = correo_electronico
         self.contrasena = contrasena
+        self.notas = []  # Lista para almacenar las notas del usuario
         self.administrador_grupo = False
 
     @staticmethod

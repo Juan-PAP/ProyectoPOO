@@ -1,5 +1,5 @@
 # main.py
-
+from clases.agenda import Agenda
 from clases.usuario import Usuario
 
 def main():
@@ -16,8 +16,9 @@ def main():
         elif opcion == "2":
             usuario = Usuario.iniciar_sesion()
             if usuario:
-                # Aquí puedes agregar lógica adicional para usuarios autenticados
                 print(f"Bienvenido de nuevo, {usuario.nombre_usuario}!")
+                agenda = Agenda(usuario=usuario)  # Usa el ID del usuario como ID de la agenda
+                agenda.mostrar_agenda()  # Inicia la interacción con la agenda
         elif opcion == "3":
             print("Saliendo del sistema.")
             break
