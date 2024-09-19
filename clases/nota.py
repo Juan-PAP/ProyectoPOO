@@ -1,16 +1,28 @@
-from datetime import datetime
 import os
+from datetime import datetime
 
 class Nota:
     notas = []  # Lista de todas las notas
+    id_counter = 1  # Contador de ID para nuevas notas
+    ids_disponibles = []  # Lista de IDs libres que se pueden reutilizar
 
-    def __init__(self, id_nota, titulo, contenido, usuario):
-        self.id_nota = id_nota
+    def __init__(self, titulo, contenido, usuario):
+        self.id_nota = self.generar_id()  # Genera un ID único
         self.titulo = titulo
         self.contenido = contenido
         self.usuario = usuario
         self.fecha_creacion = datetime.now()
         self.fecha_modificacion = None  # Inicialmente no hay modificaciones
+
+    @classmethod
+    def generar_id(cls):
+        """Genera un ID único para la nota, reutilizando IDs libres si es posible."""
+        if cls.ids_disponibles:
+            return cls.ids_disponibles.pop()  # Usa un ID libre disponible
+        else:
+            id_nota = f"{cls.id_counter:04}"
+            cls.id_counter += 1
+            return id_nota
 
     @classmethod
     def limpiar_consola(cls):
@@ -62,8 +74,7 @@ class Nota:
         """Crea una nueva nota para el usuario."""
         titulo = input("Ingrese el título de la nota: ")
         contenido = input("Ingrese el contenido de la nota: ")
-        id_nota = len(cls.notas) + 1  # Genera un ID único basado en la cantidad de notas
-        nueva_nota = cls(id_nota, titulo, contenido, usuario)
+        nueva_nota = cls(titulo, contenido, usuario)
         cls.notas.append(nueva_nota)
         cls.limpiar_consola()  # Limpia la consola después de crear la nota
         print("Nota creada con éxito.")
@@ -90,9 +101,9 @@ class Nota:
     def ver_contenido_nota(cls, usuario):
         """Permite ver el contenido de una nota específica."""
         while True:
-            indice = cls.obtener_indice_valido(usuario)
-            if indice is not None:
-                nota = cls.obtener_nota_por_indice(usuario, indice)
+            id_nota = cls.obtener_id_valido(usuario)
+            if id_nota is not None:
+                nota = cls.obtener_nota_por_id(usuario, id_nota)
                 cls.limpiar_consola()
                 print(f"\nTítulo: {nota.titulo}")
                 print(f"Contenido: {nota.contenido}")
@@ -107,9 +118,9 @@ class Nota:
     def editar_nota(cls, usuario):
         """Permite editar una nota existente."""
         while True:
-            indice = cls.obtener_indice_valido(usuario)
-            if indice is not None:
-                nota = cls.obtener_nota_por_indice(usuario, indice)
+            id_nota = cls.obtener_id_valido(usuario)
+            if id_nota is not None:
+                nota = cls.obtener_nota_por_id(usuario, id_nota)
 
                 cambiar_titulo = input("¿Desea cambiar el título? (s/n): ").lower()
                 cambiar_contenido = input("¿Desea cambiar el contenido? (s/n): ").lower()
@@ -139,12 +150,13 @@ class Nota:
     def eliminar_nota(cls, usuario):
         """Elimina una nota existente."""
         while True:
-            indice = cls.obtener_indice_valido(usuario)
-            if indice is not None:
-                nota = cls.obtener_nota_por_indice(usuario, indice)
+            id_nota = cls.obtener_id_valido(usuario)
+            if id_nota is not None:
+                nota = cls.obtener_nota_por_id(usuario, id_nota)
                 confirmacion = input("¿Está seguro que desea eliminar esta nota? (s/n): ").lower()
                 if confirmacion == "s":
                     cls.notas.remove(nota)
+                    cls.ids_disponibles.append(id_nota)  # Marca el ID como disponible
                     cls.limpiar_consola()
                     print("Nota eliminada con éxito.")
                     input("Presione Enter para continuar...")
@@ -154,29 +166,25 @@ class Nota:
                 break
 
     @classmethod
-    def obtener_indice_valido(cls, usuario):
-        """Solicita un índice válido y verifica si existe la nota."""
-        notas_usuario = [nota for nota in cls.notas if nota.usuario == usuario]
-        if not notas_usuario:
-            print("No tiene notas para gestionar.")
-            return None
-
+    def obtener_id_valido(cls, usuario):
+        """Solicita un ID válido y verifica si existe la nota."""
         while True:
-            try:
-                indice = int(input("Seleccione el ID de la nota (o '0' para cancelar): "))
-                if indice == 0:
-                    cls.limpiar_consola()
-                    print("Operación cancelada.")
-                    return None
-                if any(nota.id_nota == indice for nota in notas_usuario):
-                    return indice
+            id_nota = input("Seleccione el ID de la nota (o '0' para cancelar): ")
+            if id_nota == '0':
+                cls.limpiar_consola()
+                print("Operación cancelada.")
+                return None
+            if len(id_nota) <= 4 and id_nota.isdigit():
+                nota = cls.obtener_nota_por_id(usuario, id_nota)
+                if nota:
+                    return id_nota
                 else:
                     print("ID no válido. Intente de nuevo.")
-            except ValueError:
-                print("Entrada no válida. Ingrese un número.")
+            else:
+                print("ID no válido. Intente de nuevo.")
 
     @classmethod
-    def obtener_nota_por_indice(cls, usuario, id_nota):
+    def obtener_nota_por_id(cls, usuario, id_nota):
         """Obtiene una nota específica por el ID."""
         for nota in cls.notas:
             if nota.usuario == usuario and nota.id_nota == id_nota:
