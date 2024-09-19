@@ -28,6 +28,11 @@ class Usuario:
         return re.match(patron, correo_electronico) is not None
 
     @staticmethod
+    def es_correo_unico(correo_electronico):
+        """Verifica que el correo electrónico sea único."""
+        return all(usuario.correo_electronico != correo_electronico for usuario in Usuario.usuarios)
+
+    @staticmethod
     def es_contrasena_valida(contrasena):
         """Verifica que la contraseña tenga entre 4 y 12 caracteres."""
         return 4 <= len(contrasena) <= 12
@@ -90,6 +95,11 @@ class Usuario:
 
         # Validación del correo electrónico
         correo_electronico = cls.solicitar_correo_valido()
+
+        # Verificar si el correo electrónico es único
+        if not cls.es_correo_unico(correo_electronico):
+            print("El correo electrónico ya está en uso. Intente con otro correo.")
+            return
 
         # Validación de la contraseña
         contrasena = cls.ingresar_contrasena()
