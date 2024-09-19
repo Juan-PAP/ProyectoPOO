@@ -38,15 +38,42 @@ class Usuario:
         contrasena = input("Ingrese contraseña (4-12 caracteres): ")
         return contrasena
 
+    @staticmethod
+    def solicitar_id_valido():
+        """Solicita un ID de usuario válido, que solo contiene números."""
+        while True:
+            id_usuario = input("Ingrese ID de usuario (7-10 caracteres, solo números): ")
+            if not re.match(r'^\d{7,10}$', id_usuario):
+                print("Formato de ID no válido. Debe tener entre 7 y 10 caracteres y solo incluir números.")
+            else:
+                return id_usuario
+
+    @staticmethod
+    def solicitar_correo_valido():
+        """Solicita un correo válido."""
+        while True:
+            correo_electronico = input("Ingrese correo electrónico: ")
+            if not Usuario.es_correo_valido(correo_electronico):
+                print("Formato de correo electrónico no válido. Intente de nuevo.")
+            else:
+                return correo_electronico
+
+    @staticmethod
+    def solicitar_nombre_usuario_valido():
+        """Solicita un nombre de usuario válido."""
+        while True:
+            nombre_usuario = input("Ingrese nombre de usuario (8-16 caracteres): ")
+            if len(nombre_usuario) < 8 or len(nombre_usuario) > 16:
+                print("El nombre de usuario debe tener entre 8 y 16 caracteres.")
+            else:
+                return nombre_usuario
+
     @classmethod
     def registrar_usuario(cls):
         print("Ingrese los detalles del nuevo usuario")
 
         # Validación del ID de usuario
-        id_usuario = input("Ingrese ID de usuario (7-10 caracteres): ")
-        while len(id_usuario) < 7 or len(id_usuario) > 10:
-            print("El ID de usuario debe tener entre 7 y 10 caracteres.")
-            id_usuario = input("Ingrese ID de usuario (7-10 caracteres): ")
+        id_usuario = cls.solicitar_id_valido()
 
         # Verificar si el ID de usuario es único
         if not cls.es_id_usuario_unico(id_usuario):
@@ -54,10 +81,7 @@ class Usuario:
             return
 
         # Validación del nombre de usuario
-        nombre_usuario = input("Ingrese nombre de usuario (8-16 caracteres): ")
-        while len(nombre_usuario) < 8 or len(nombre_usuario) > 16:
-            print("El nombre de usuario debe tener entre 8 y 16 caracteres.")
-            nombre_usuario = input("Ingrese nombre de usuario (8-16 caracteres): ")
+        nombre_usuario = cls.solicitar_nombre_usuario_valido()
 
         # Verificar si el nombre de usuario es único
         if not cls.es_nombre_usuario_unico(nombre_usuario):
@@ -65,10 +89,7 @@ class Usuario:
             return
 
         # Validación del correo electrónico
-        correo_electronico = input("Ingrese correo electrónico: ")
-        while not cls.es_correo_valido(correo_electronico):
-            print("El formato del correo electrónico no es válido. Intente de nuevo.")
-            correo_electronico = input("Ingrese correo electrónico: ")
+        correo_electronico = cls.solicitar_correo_valido()
 
         # Validación de la contraseña
         contrasena = cls.ingresar_contrasena()
@@ -80,22 +101,59 @@ class Usuario:
         nuevo_usuario = cls(id_usuario, nombre_usuario, correo_electronico, contrasena)
         cls.usuarios.append(nuevo_usuario)
 
-        # Mostrar la contraseña oculta con asteriscos
         print(f"Usuario '{nombre_usuario}' registrado con éxito.")
-        print(f"Contraseña: {'*' * len(contrasena)}")
+        print(f"Contraseña: {contrasena}")
         print("Puede iniciar sesión con sus nuevas credenciales.")
 
     @classmethod
     def iniciar_sesion(cls):
         print("Ingrese sus credenciales para iniciar sesión")
 
-        nombre_usuario = input("Nombre de usuario: ")
+        # Solicitar nombre de usuario y verificar si está registrado
+        while True:
+            nombre_usuario = input("Nombre de usuario: ")
+            usuario_encontrado = next((usuario for usuario in cls.usuarios if usuario.nombre_usuario == nombre_usuario), None)
+
+            if usuario_encontrado is None:
+                print("Nombre de usuario no registrado. Intente de nuevo.")
+            else:
+                break
+
+        # Solicitar contraseña y verificar
         contrasena = cls.ingresar_contrasena()
 
-        for usuario in cls.usuarios:
-            if usuario.nombre_usuario == nombre_usuario and usuario.contrasena == contrasena:
-                print(f"Inicio de sesión exitoso para {nombre_usuario}.")
-                return usuario  # Devuelve el usuario autenticado
+        if usuario_encontrado.contrasena == contrasena:
+            print(f"Inicio de sesión exitoso para {nombre_usuario}.")
+            return usuario_encontrado  # Devuelve el usuario autenticado
+        else:
+            print("Contraseña incorrecta.")
+            return None  # Devuelve None si la autenticación falla
 
-        print("Nombre de usuario o contraseña incorrectos.")
-        return None  # Devuelve None si la autenticación falla
+    @classmethod
+    def recuperar_contrasena(cls):
+        print("=== Recuperación de Contraseña ===")
+        id_usuario = cls.solicitar_id_valido()
+
+        # Verificar si existe un usuario con ese ID
+        usuario_encontrado = next((usuario for usuario in cls.usuarios if usuario.id_usuario == id_usuario), None)
+
+        if usuario_encontrado is None:
+            print("ID de usuario no encontrado. Verifique los datos.")
+            return
+
+        # Validación del correo electrónico asociado
+        correo_electronico = cls.solicitar_correo_valido()
+
+        if usuario_encontrado.correo_electronico != correo_electronico:
+            print("Correo electrónico no coincide con el registrado.")
+            return
+
+        # Permitir cambiar la contraseña
+        print("ID y correo verificados. Puede cambiar su contraseña.")
+        nueva_contrasena = cls.ingresar_contrasena()
+        while not cls.es_contrasena_valida(nueva_contrasena):
+            print("La contraseña debe tener entre 4 y 12 caracteres.")
+            nueva_contrasena = cls.ingresar_contrasena()
+
+        usuario_encontrado.contrasena = nueva_contrasena
+        print("Contraseña actualizada con éxito.")
