@@ -120,9 +120,11 @@ class Usuario:
         print("Ingrese sus credenciales para iniciar sesión")
 
         # Solicitar nombre de usuario y verificar si está registrado
+        usuario_encontrado = None
         while True:
             nombre_usuario = input("Nombre de usuario: ")
-            usuario_encontrado = next((usuario for usuario in cls.usuarios if usuario.nombre_usuario == nombre_usuario), None)
+            usuario_encontrado = next((usuario for usuario in cls.usuarios if usuario.nombre_usuario == nombre_usuario),
+                                      None)
 
             if usuario_encontrado is None:
                 print("Nombre de usuario no registrado. Intente de nuevo.")
@@ -130,14 +132,18 @@ class Usuario:
                 break
 
         # Solicitar contraseña y verificar
-        contrasena = cls.ingresar_contrasena()
+        intentos_restantes = 3
+        while intentos_restantes > 0:
+            contrasena = cls.ingresar_contrasena()
+            if usuario_encontrado.contrasena == contrasena:
+                print(f"Inicio de sesión exitoso para {nombre_usuario}.")
+                return usuario_encontrado  # Devuelve el usuario autenticado
+            else:
+                intentos_restantes -= 1
+                print(f"Contraseña incorrecta. Le quedan {intentos_restantes} intentos.")
 
-        if usuario_encontrado.contrasena == contrasena:
-            print(f"Inicio de sesión exitoso para {nombre_usuario}.")
-            return usuario_encontrado  # Devuelve el usuario autenticado
-        else:
-            print("Contraseña incorrecta.")
-            return None  # Devuelve None si la autenticación falla
+        print("Ha excedido el número de intentos.")
+        return None  # Devuelve None si la autenticación falla
 
     @classmethod
     def recuperar_contrasena(cls):
