@@ -1,13 +1,12 @@
-import os
 from datetime import datetime
+import os
+
 
 class Nota:
     notas = []  # Lista de todas las notas
-    id_counter = 1  # Contador de ID para nuevas notas
-    ids_disponibles = []  # Lista de IDs libres que se pueden reutilizar
 
-    def __init__(self, titulo, contenido, usuario):
-        self.id_nota = self.generar_id()  # Genera un ID único
+    def __init__(self, id_nota, titulo, contenido, usuario):
+        self.id_nota = id_nota
         self.titulo = titulo
         self.contenido = contenido
         self.usuario = usuario
@@ -15,25 +14,23 @@ class Nota:
         self.fecha_modificacion = None  # Inicialmente no hay modificaciones
 
     @classmethod
-    def generar_id(cls):
-        """Genera un ID único para la nota, reutilizando IDs libres si es posible."""
-        if cls.ids_disponibles:
-            return cls.ids_disponibles.pop()  # Usa un ID libre disponible
-        else:
-            id_nota = f"{cls.id_counter:04}"
-            cls.id_counter += 1
-            return id_nota
-
-    @classmethod
     def limpiar_consola(cls):
         """Limpia la consola en Windows."""
         os.system("cls")
 
     @classmethod
+    def generar_id_unico(cls):
+        """Genera un ID único para una nueva nota."""
+        id_nota = 1
+        while any(nota.id_nota == id_nota for nota in cls.notas):
+            id_nota += 1
+        return id_nota
+
+    @classmethod
     def gestionar_notas(cls, usuario):
         """Gestiona las notas del usuario."""
         while True:
-            cls.limpiar_consola()  # Limpiar consola antes de mostrar el menú de gestión de notas
+            cls.limpiar_consola()
             print("\n===== Gestión de Notas =====")
             print("1. Ver todas las notas")
             print("2. Crear nueva nota")
@@ -44,39 +41,43 @@ class Nota:
             opcion = input("Seleccione una opción: ")
 
             if opcion == "1":
-                cls.limpiar_consola()  # Limpia la consola antes de imprimir las notas
+                cls.limpiar_consola()
                 if not cls.imprimir_notas(usuario):
                     print("No tiene notas creadas.")
                 else:
-                    cls.ver_contenido_nota(usuario)  # Ver el contenido específico de una nota
+                    cls.ver_contenido_nota(usuario)
             elif opcion == "2":
-                cls.limpiar_consola()  # Limpia la consola antes de crear una nueva nota
+                cls.limpiar_consola()
                 cls.crear_nota(usuario)
             elif opcion == "3":
-                cls.limpiar_consola()  # Limpia la consola antes de editar una nota
-                if cls.imprimir_notas(usuario):  # Solo mostrar si hay notas
+                cls.limpiar_consola()
+                if cls.imprimir_notas(usuario):
                     cls.editar_nota(usuario)
             elif opcion == "4":
-                cls.limpiar_consola()  # Limpia la consola antes de eliminar una nota
-                if cls.imprimir_notas(usuario):  # Solo mostrar si hay notas
+                cls.limpiar_consola()
+                if cls.imprimir_notas(usuario):
                     cls.eliminar_nota(usuario)
             elif opcion == "5":
                 print("Volviendo al menú principal...")
-                cls.limpiar_consola()  # Limpia la consola antes de volver al menú principal
+                cls.limpiar_consola()
                 break
             else:
                 print("Opción no válida. Intente de nuevo.")
                 input("Presione Enter para continuar...")
-                cls.limpiar_consola()  # Limpia la consola después de mostrar el mensaje de error
+                cls.limpiar_consola()
 
     @classmethod
     def crear_nota(cls, usuario):
         """Crea una nueva nota para el usuario."""
         titulo = input("Ingrese el título de la nota: ")
         contenido = input("Ingrese el contenido de la nota: ")
-        nueva_nota = cls(titulo, contenido, usuario)
+
+        # Asignar un nuevo ID único
+        id_nota = cls.generar_id_unico()
+
+        nueva_nota = cls(id_nota, titulo, contenido, usuario)
         cls.notas.append(nueva_nota)
-        cls.limpiar_consola()  # Limpia la consola después de crear la nota
+        cls.limpiar_consola()
         print("Nota creada con éxito.")
 
     @classmethod
@@ -92,18 +93,19 @@ class Nota:
             fecha_creacion = nota.fecha_creacion.strftime("%Y-%m-%d %H:%M:%S")
             if nota.fecha_modificacion:
                 fecha_modificacion = nota.fecha_modificacion.strftime("%Y-%m-%d %H:%M:%S")
-                print(f"ID: {nota.id_nota}, Título: {nota.titulo}, Creada: {fecha_creacion}, Modificada: {fecha_modificacion}")
+                print(
+                    f"ID: {nota.id_nota:04}, Título: {nota.titulo}, Creada: {fecha_creacion}, Modificada: {fecha_modificacion}")
             else:
-                print(f"ID: {nota.id_nota}, Título: {nota.titulo}, Creada: {fecha_creacion}")
+                print(f"ID: {nota.id_nota:04}, Título: {nota.titulo}, Creada: {fecha_creacion}")
         return True
 
     @classmethod
     def ver_contenido_nota(cls, usuario):
         """Permite ver el contenido de una nota específica."""
         while True:
-            id_nota = cls.obtener_id_valido(usuario)
-            if id_nota is not None:
-                nota = cls.obtener_nota_por_id(usuario, id_nota)
+            indice = cls.obtener_indice_valido(usuario)
+            if indice is not None:
+                nota = cls.obtener_nota_por_indice(usuario, indice)
                 cls.limpiar_consola()
                 print(f"\nTítulo: {nota.titulo}")
                 print(f"Contenido: {nota.contenido}")
@@ -111,16 +113,16 @@ class Nota:
                 if nota.fecha_modificacion:
                     print(f"Última modificación: {nota.fecha_modificacion.strftime('%Y-%m-%d %H:%M:%S')}")
                 input("Presione Enter para continuar...")
-                cls.limpiar_consola()  # Limpia la consola después de mostrar el contenido de la nota
+                cls.limpiar_consola()
                 break
 
     @classmethod
     def editar_nota(cls, usuario):
         """Permite editar una nota existente."""
         while True:
-            id_nota = cls.obtener_id_valido(usuario)
-            if id_nota is not None:
-                nota = cls.obtener_nota_por_id(usuario, id_nota)
+            indice = cls.obtener_indice_valido(usuario)
+            if indice is not None:
+                nota = cls.obtener_nota_por_indice(usuario, indice)
 
                 cambiar_titulo = input("¿Desea cambiar el título? (s/n): ").lower()
                 cambiar_contenido = input("¿Desea cambiar el contenido? (s/n): ").lower()
@@ -143,48 +145,47 @@ class Nota:
                 else:
                     print("La nota no ha sido editada.")
                 input("Presione Enter para continuar...")
-                cls.limpiar_consola()  # Limpia la consola después de editar la nota
+                cls.limpiar_consola()
                 break
 
     @classmethod
     def eliminar_nota(cls, usuario):
         """Elimina una nota existente."""
         while True:
-            id_nota = cls.obtener_id_valido(usuario)
-            if id_nota is not None:
-                nota = cls.obtener_nota_por_id(usuario, id_nota)
+            indice = cls.obtener_indice_valido(usuario)
+            if indice is not None:
+                nota = cls.obtener_nota_por_indice(usuario, indice)
                 confirmacion = input("¿Está seguro que desea eliminar esta nota? (s/n): ").lower()
                 if confirmacion == "s":
                     cls.notas.remove(nota)
-                    cls.ids_disponibles.append(id_nota)  # Marca el ID como disponible
                     cls.limpiar_consola()
                     print("Nota eliminada con éxito.")
                     input("Presione Enter para continuar...")
-                    cls.limpiar_consola()  # Limpia la consola después de eliminar la nota
+                    cls.limpiar_consola()
                 else:
                     print("Eliminación de nota cancelada.")
                 break
 
     @classmethod
-    def obtener_id_valido(cls, usuario):
-        """Solicita un ID válido y verifica si existe la nota."""
+    def obtener_indice_valido(cls, usuario):
+        """Solicita un índice válido y verifica si existe la nota."""
+        notas_usuario = [nota for nota in cls.notas if nota.usuario == usuario]
+        if not notas_usuario:
+            print("No tiene notas para gestionar.")
+            return None
+
         while True:
-            id_nota = input("Seleccione el ID de la nota (o '0' para cancelar): ")
-            if id_nota == '0':
-                cls.limpiar_consola()
-                print("Operación cancelada.")
-                return None
-            if len(id_nota) <= 4 and id_nota.isdigit():
-                nota = cls.obtener_nota_por_id(usuario, id_nota)
-                if nota:
-                    return id_nota
+            try:
+                indice = int(input("Seleccione el ID de la nota: "))
+                if any(nota.id_nota == indice for nota in notas_usuario):
+                    return indice
                 else:
                     print("ID no válido. Intente de nuevo.")
-            else:
-                print("ID no válido. Intente de nuevo.")
+            except ValueError:
+                print("Entrada no válida. Ingrese un número.")
 
     @classmethod
-    def obtener_nota_por_id(cls, usuario, id_nota):
+    def obtener_nota_por_indice(cls, usuario, id_nota):
         """Obtiene una nota específica por el ID."""
         for nota in cls.notas:
             if nota.usuario == usuario and nota.id_nota == id_nota:
