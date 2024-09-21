@@ -3,7 +3,6 @@ import os
 from clases.historial import HistorialNota
 from clases.etiqueta import Etiqueta
 
-
 class Nota:
     """Clase principal para la gestión de notas."""
     notas = {}  # Diccionario de todas las notas (ID -> Nota)
@@ -15,7 +14,7 @@ class Nota:
         self.usuario = usuario
         self.fecha_creacion = datetime.now()
         self.fecha_modificacion = None  # Inicialmente no hay modificaciones
-        self.etiquetas = []  # Lista de etiquetas asociadas a la nota
+        self.etiqueta = None  # Una sola etiqueta asociada
         self.historial = HistorialNota(self)  # Instancia de historial de cambios
 
     @classmethod
@@ -57,10 +56,10 @@ class Nota:
                 cls.crear_nota(usuario)
             elif opcion == "3":
                 if cls.verificar_existencia_notas(usuario):
-                    cls.editar_nota(usuario)
+                    cls.editar_nota(usuario)  # Llamada a la función que permite editar una nota
             elif opcion == "4":
                 if cls.verificar_existencia_notas(usuario):
-                    cls.eliminar_nota(usuario)
+                    cls.eliminar_nota(usuario)  # Llamada a la función que permite eliminar una nota
             elif opcion == "5":
                 if cls.verificar_existencia_notas(usuario):
                     cls.agregar_etiqueta_a_nota(usuario)
@@ -69,10 +68,10 @@ class Nota:
                     cls.eliminar_etiqueta_de_nota(usuario)
             elif opcion == "7":
                 if cls.verificar_existencia_notas(usuario):
-                    cls.revertir_cambio_nota(usuario)
+                    cls.revertir_cambio_nota(usuario)  # Llamada a la función para revertir un cambio
             elif opcion == "8":
                 if cls.verificar_existencia_notas(usuario):
-                    cls.ver_historial_nota(usuario)
+                    cls.ver_historial_nota(usuario)  # Llamada a la función para ver el historial de una nota
             elif opcion == "9":
                 print("Volviendo al menú principal...")
                 cls.limpiar_consola()
@@ -81,6 +80,46 @@ class Nota:
                 print("Opción no válida. Intente de nuevo.")
                 input("Presione Enter para continuar...")
                 cls.limpiar_consola()
+
+    @classmethod
+    def editar_nota(cls, usuario):
+        """Permite editar una nota existente."""
+        id_nota = cls.obtener_indice_valido(usuario)
+        if id_nota is not None:
+            nota = cls.obtener_nota_por_indice(usuario, id_nota)
+            nota.historial.editar()  # Llama a la clase HistorialNota para editar la nota
+
+    @classmethod
+    def eliminar_nota(cls, usuario):
+        """Elimina una nota existente."""
+        id_nota = cls.obtener_indice_valido(usuario)
+        if id_nota is not None:
+            nota = cls.obtener_nota_por_indice(usuario, id_nota)
+            confirmacion = input("¿Está seguro que desea eliminar esta nota? (s/n): ").lower()
+            if confirmacion == "s":
+                del cls.notas[nota.id_nota]
+                cls.limpiar_consola()
+                print("Nota eliminada con éxito.")
+            else:
+                print("Eliminación de nota cancelada.")
+            input("Presione Enter para continuar...")
+            cls.limpiar_consola()
+
+    @classmethod
+    def revertir_cambio_nota(cls, usuario):
+        """Revertir un cambio en el historial de la nota."""
+        id_nota = cls.obtener_indice_valido(usuario)
+        if id_nota is not None:
+            nota = cls.obtener_nota_por_indice(usuario, id_nota)
+            nota.historial.revertir_cambio()  # Llama a HistorialNota para revertir cambios
+
+    @classmethod
+    def ver_historial_nota(cls, usuario):
+        """Muestra el historial de modificaciones de una nota."""
+        id_nota = cls.obtener_indice_valido(usuario)
+        if id_nota is not None:
+            nota = cls.obtener_nota_por_indice(usuario, id_nota)
+            nota.historial.mostrar_historial()  # Llama a HistorialNota para mostrar el historial
 
     @classmethod
     def verificar_existencia_notas(cls, usuario):
@@ -142,77 +181,52 @@ class Nota:
             cls.limpiar_consola()
 
     @classmethod
-    def editar_nota(cls, usuario):
-        """Delegar la edición de una nota a la clase HistorialNota."""
-        id_nota = cls.obtener_indice_valido(usuario)
-        if id_nota is not None:
-            nota = cls.obtener_nota_por_indice(usuario, id_nota)
-            nota.historial.editar()
-
-    @classmethod
-    def eliminar_nota(cls, usuario):
-        """Elimina una nota existente."""
-        id_nota = cls.obtener_indice_valido(usuario)
-        if id_nota is not None:
-            nota = cls.obtener_nota_por_indice(usuario, id_nota)
-            confirmacion = input("¿Está seguro que desea eliminar esta nota? (s/n): ").lower()
-            if confirmacion == "s":
-                del cls.notas[nota.id_nota]
-                cls.limpiar_consola()
-                print("Nota eliminada con éxito.")
-            else:
-                print("Eliminación de nota cancelada.")
-            input("Presione Enter para continuar...")
-            cls.limpiar_consola()
-
-    @classmethod
     def agregar_etiqueta_a_nota(cls, usuario):
-        """Agrega una etiqueta a una nota existente."""
+        """Permite asignar una etiqueta existente o crear una nueva etiqueta a una nota."""
         id_nota = cls.obtener_indice_valido(usuario)
         if id_nota is not None:
             nota = cls.obtener_nota_por_indice(usuario, id_nota)
-            nombre_etiqueta = input("Ingrese el nombre de la etiqueta: ")
 
-            etiqueta = Etiqueta.obtener_o_crear_etiqueta(nombre_etiqueta)
-            nota.agregar_etiqueta(etiqueta)
-            cls.limpiar_consola()
-            print(f"Etiqueta '{nombre_etiqueta}' agregada a la nota.")
-            input("Presione Enter para continuar...")
-            cls.limpiar_consola()
+            # Mostrar etiquetas existentes
+            Etiqueta.mostrar_etiquetas_usuario()
+
+            opcion = input("¿Desea crear una nueva etiqueta? (s/n): ").lower()
+            if opcion == 's':
+                nombre_etiqueta = input("Ingrese el nombre de la nueva etiqueta: ")
+                etiqueta = Etiqueta.obtener_o_crear_etiqueta(nombre_etiqueta)
+            else:
+                try:
+                    id_etiqueta = int(input("Ingrese el ID de la etiqueta que desea asignar: "))
+                    etiqueta = Etiqueta.buscar_etiqueta_por_id(id_etiqueta)
+                except ValueError:
+                    print("ID inválido.")
+                    return
+
+            if etiqueta:
+                etiqueta.asignar_a_nota(nota)
 
     @classmethod
     def eliminar_etiqueta_de_nota(cls, usuario):
-        """Elimina una etiqueta de una nota existente."""
+        """Permite eliminar una etiqueta de una nota."""
         id_nota = cls.obtener_indice_valido(usuario)
         if id_nota is not None:
             nota = cls.obtener_nota_por_indice(usuario, id_nota)
-            nombre_etiqueta = input("Ingrese el nombre de la etiqueta a eliminar: ")
 
-            etiqueta = Etiqueta.buscar_etiqueta(nombre_etiqueta)
-            if etiqueta:
-                nota.eliminar_etiqueta(etiqueta)
-                cls.limpiar_consola()
-                print(f"Etiqueta '{nombre_etiqueta}' eliminada de la nota.")
+            if nota.etiqueta is not None:
+                nota.etiqueta.eliminar_de_nota(nota)
             else:
-                print("Etiqueta no encontrada en la nota.")
-            input("Presione Enter para continuar...")
-            cls.limpiar_consola()
+                print("La nota no tiene ninguna etiqueta asignada.")
 
     @classmethod
-    def revertir_cambio_nota(cls, usuario):
-        """Delegar la reversión de un cambio a la clase HistorialNota."""
-        id_nota = cls.obtener_indice_valido(usuario)
-        if id_nota is not None:
-            nota = cls.obtener_nota_por_indice(usuario, id_nota)
-            nota.historial.revertir_cambio()
-
-    @classmethod
-    def ver_historial_nota(cls, usuario):
-        """Delegar la visualización del historial a la clase HistorialNota."""
-        id_nota = cls.obtener_indice_valido(usuario)
-        if id_nota is not None:
-            nota = cls.obtener_nota_por_indice(usuario, id_nota)
-            nota.historial.mostrar_historial()
+    def buscar_notas_por_etiqueta(cls, usuario):
+        """Permite buscar notas filtradas por una etiqueta."""
+        # Mostrar etiquetas existentes
+        Etiqueta.mostrar_etiquetas_usuario()
+        try:
+            id_etiqueta = int(input("Ingrese el ID de la etiqueta para buscar las notas relacionadas: "))
+            Etiqueta.buscar_notas_por_etiqueta(id_etiqueta)
+        except ValueError:
+            print("ID inválido.")
 
     @classmethod
     def obtener_indice_valido(cls, usuario):
@@ -247,13 +261,3 @@ class Nota:
         """Edita el contenido de la nota."""
         self.contenido = nuevo_contenido
         self.fecha_modificacion = datetime.now()
-
-    def agregar_etiqueta(self, etiqueta):
-        """Agrega una etiqueta a la nota si no está presente."""
-        if etiqueta not in self.etiquetas:
-            self.etiquetas.append(etiqueta)
-
-    def eliminar_etiqueta(self, etiqueta):
-        """Elimina una etiqueta de la nota si está presente."""
-        if etiqueta in self.etiquetas:
-            self.etiquetas.remove(etiqueta)
