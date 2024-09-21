@@ -1,12 +1,11 @@
 from datetime import datetime
 
-
 class HistorialNota:
     """Clase para gestionar el historial de modificaciones de una nota."""
 
     def __init__(self, nota):
         self.nota = nota
-        self.historial = []
+        self.historial = []  # Lista de cambios
 
     def registrar_cambio(self, campo, valor_anterior, valor_nuevo):
         """Registra un cambio en la nota."""
@@ -18,25 +17,40 @@ class HistorialNota:
             "fecha_modificacion": timestamp
         })
 
-    def revertir_cambio(self, indice):
-        """Revertir un cambio en la nota según el historial."""
-        if 0 <= indice < len(self.historial):
-            cambio = self.historial[indice]
+    def editar(self):
+        """Permite editar la nota y registra los cambios en el historial."""
+        cambiar_titulo = input("¿Desea cambiar el título? (s/n): ").lower()
+        cambiar_contenido = input("¿Desea cambiar el contenido? (s/n): ").lower()
 
-            # Verificar que el diccionario tiene las claves necesarias
-            if all(k in cambio for k in ("campo", "valor_anterior", "valor_nuevo")):
-                # Verificar que el campo existe en la nota antes de revertir
+        if cambiar_titulo == 's':
+            nuevo_titulo = input("Ingrese el nuevo título: ")
+            self.registrar_cambio("titulo", self.nota.titulo, nuevo_titulo)
+            self.nota.editar_titulo(nuevo_titulo)
+
+        if cambiar_contenido == 's':
+            nuevo_contenido = input("Ingrese el nuevo contenido: ")
+            self.registrar_cambio("contenido", self.nota.contenido, nuevo_contenido)
+            self.nota.editar_contenido(nuevo_contenido)
+
+        print("Nota editada con éxito.")
+
+    def revertir_cambio(self):
+        """Revertir un cambio según el historial."""
+        self.mostrar_historial()  # Mostrar el historial antes de revertir
+        try:
+            indice = int(input("Ingrese el número de la modificación que desea revertir: ")) - 1
+            if 0 <= indice < len(self.historial):
+                cambio = self.historial[indice]
                 if hasattr(self.nota, cambio["campo"]):
                     setattr(self.nota, cambio["campo"], cambio["valor_anterior"])
                     self.nota.fecha_modificacion = datetime.now()
-                    return True
+                    print("El cambio ha sido revertido exitosamente.")
                 else:
                     print(f"Error: El campo '{cambio['campo']}' no existe en la nota.")
-                    return False
             else:
-                print("Error: El historial de cambios no tiene la estructura esperada.")
-                return False
-        return False
+                print("Índice no válido.")
+        except ValueError:
+            print("Entrada no válida. Debe ingresar un número.")
 
     def mostrar_historial(self):
         """Muestra el historial de cambios realizados."""

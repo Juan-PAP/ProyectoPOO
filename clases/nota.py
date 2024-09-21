@@ -1,7 +1,8 @@
 from datetime import datetime
+import os
 from clases.historial import HistorialNota
 from clases.etiqueta import Etiqueta
-import os
+
 
 class Nota:
     """Clase principal para la gestión de notas."""
@@ -24,7 +25,7 @@ class Nota:
 
     @classmethod
     def generar_id_unico(cls):
-        """Genera un ID único para una nueva nota usando diccionario."""
+        """Genera un ID único para una nueva nota usando el diccionario."""
         return max(cls.notas.keys(), default=0) + 1
 
     @classmethod
@@ -113,7 +114,6 @@ class Nota:
         notas_usuario = [nota for nota in cls.notas.values() if nota.usuario == usuario]
         if not notas_usuario:
             return False
-        # Luego ya trabajas con `notas_usuario` en lugar de recalcular.
 
         cls.limpiar_consola()
         print("\n===== Sus Notas =====")
@@ -143,28 +143,11 @@ class Nota:
 
     @classmethod
     def editar_nota(cls, usuario):
-        """Permite editar una nota existente y delega el manejo del historial."""
+        """Delegar la edición de una nota a la clase HistorialNota."""
         id_nota = cls.obtener_indice_valido(usuario)
         if id_nota is not None:
             nota = cls.obtener_nota_por_indice(usuario, id_nota)
-
-            cambiar_titulo = input("¿Desea cambiar el título? (s/n): ").lower()
-            cambiar_contenido = input("¿Desea cambiar el contenido? (s/n): ").lower()
-
-            if cambiar_titulo == 's':
-                nuevo_titulo = input("Ingrese el nuevo título: ")
-                nota.historial.registrar_cambio("titulo", nota.titulo, nuevo_titulo)
-                nota.editar_titulo(nuevo_titulo)
-
-            if cambiar_contenido == 's':
-                nuevo_contenido = input("Ingrese el nuevo contenido: ")
-                nota.historial.registrar_cambio("contenido", nota.contenido, nuevo_contenido)
-                nota.editar_contenido(nuevo_contenido)
-
-            cls.limpiar_consola()
-            print("Nota editada con éxito.")
-            input("Presione Enter para continuar...")
-            cls.limpiar_consola()
+            nota.historial.editar()
 
     @classmethod
     def eliminar_nota(cls, usuario):
@@ -217,35 +200,19 @@ class Nota:
 
     @classmethod
     def revertir_cambio_nota(cls, usuario):
-        """Revertir un cambio en el historial de la nota."""
+        """Delegar la reversión de un cambio a la clase HistorialNota."""
         id_nota = cls.obtener_indice_valido(usuario)
         if id_nota is not None:
             nota = cls.obtener_nota_por_indice(usuario, id_nota)
-
-            # Mostrar el historial de cambios
-            nota.historial.mostrar_historial()
-
-            try:
-                indice = int(input("Ingrese el número de la modificación que desea revertir: ")) - 1
-                if nota.historial.revertir_cambio(indice):
-                    print("El cambio ha sido revertido exitosamente.")
-                else:
-                    print("El índice ingresado no es válido.")
-            except ValueError:
-                print("Entrada no válida. Debe ingresar un número.")
-
-            input("Presione Enter para continuar...")
-            cls.limpiar_consola()
+            nota.historial.revertir_cambio()
 
     @classmethod
     def ver_historial_nota(cls, usuario):
-        """Muestra el historial de modificaciones de una nota."""
+        """Delegar la visualización del historial a la clase HistorialNota."""
         id_nota = cls.obtener_indice_valido(usuario)
         if id_nota is not None:
             nota = cls.obtener_nota_por_indice(usuario, id_nota)
             nota.historial.mostrar_historial()
-            input("Presione Enter para continuar...")
-            cls.limpiar_consola()
 
     @classmethod
     def obtener_indice_valido(cls, usuario):
