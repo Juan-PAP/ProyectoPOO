@@ -1,5 +1,6 @@
 import os
 from clases.nota import Nota
+from clases.calendario import Calendario
 
 def limpiar_consola():
     """Limpia la consola en Windows."""
@@ -13,6 +14,7 @@ def mostrar_mensaje(mensaje):
 class Agenda:
     def __init__(self, usuario):
         self.usuario = usuario
+        self.calendario = Calendario()  # Instanciamos el calendario
 
     def mostrar_agenda(self):
         """Muestra las opciones principales de la agenda al usuario."""
@@ -20,7 +22,7 @@ class Agenda:
             limpiar_consola()  # Limpia la consola al mostrar el menú
             print("\n===== Agenda de Usuario =====")
             print("1. Notas")
-            print("2. Calendario (Próximamente)")
+            print("2. Calendario")
             print("3. Grupo (Próximamente)")
             print("4. Ver perfil")
             print("5. Cerrar sesión")
@@ -30,7 +32,9 @@ class Agenda:
 
             if opcion == "1":
                 self.gestionar_notas()
-            elif opcion == "2" or opcion == "3":
+            elif opcion == "2":
+                self.gestionar_calendario()  # Agregamos la opción para gestionar el calendario
+            elif opcion == "3":
                 mostrar_mensaje("Opción en desarrollo. Intente de nuevo.")
             elif opcion == "4":
                 self.mostrar_perfil()
@@ -49,6 +53,12 @@ class Agenda:
         Nota.gestionar_notas(self.usuario)  # Llama directamente a la gestión de notas
         limpiar_consola()  # Limpia la consola después de gestionar notas
 
+    def gestionar_calendario(self):
+        """Gestiona las funcionalidades del calendario."""
+        limpiar_consola()  # Limpia la consola antes de gestionar el calendario
+        self.calendario.mostrar_menu(self.usuario)  # Llama al menú de la clase Calendario
+        limpiar_consola()  # Limpia la consola después de gestionar el calendario
+
     def mostrar_perfil(self):
         """Muestra la información del perfil del usuario."""
         limpiar_consola()  # Limpia la consola antes de mostrar el perfil
@@ -62,4 +72,3 @@ class Agenda:
         """Pregunta al usuario si desea cerrar sesión."""
         confirmacion = input("¿Está seguro que desea cerrar sesión? (s/n): ").lower()
         return confirmacion == "s"
-
