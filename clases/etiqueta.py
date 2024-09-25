@@ -17,9 +17,9 @@ class Etiqueta:
     @classmethod
     def obtener_o_crear_etiqueta(cls, nombre):
         """Obtiene una etiqueta si ya existe, o la crea si no."""
-        # Buscar por nombre primero
+        # Buscar por nombre primero, ignorando mayúsculas/minúsculas
         for etiqueta in cls.etiquetas_existentes.values():
-            if etiqueta.nombre == nombre:
+            if etiqueta.nombre.lower() == nombre.lower():
                 return etiqueta
 
         # Si no existe, crear una nueva etiqueta

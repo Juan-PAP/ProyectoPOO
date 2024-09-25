@@ -41,7 +41,8 @@ class Nota:
             print("6. Eliminar etiqueta de nota")
             print("7. Revertir cambios en una nota")
             print("8. Ver historial de modificaciones")
-            print("9. Volver al menú principal")
+            print("9. Buscar notas por etiqueta")  # Nueva opción para buscar notas por etiqueta
+            print("10. Volver al menú principal")
 
             opcion = input("Seleccione una opción: ")
 
@@ -56,10 +57,10 @@ class Nota:
                 cls.crear_nota(usuario)
             elif opcion == "3":
                 if cls.verificar_existencia_notas(usuario):
-                    cls.editar_nota(usuario)  # Llamada a la función que permite editar una nota
+                    cls.editar_nota(usuario)
             elif opcion == "4":
                 if cls.verificar_existencia_notas(usuario):
-                    cls.eliminar_nota(usuario)  # Llamada a la función que permite eliminar una nota
+                    cls.eliminar_nota(usuario)
             elif opcion == "5":
                 if cls.verificar_existencia_notas(usuario):
                     cls.agregar_etiqueta_a_nota(usuario)
@@ -68,11 +69,14 @@ class Nota:
                     cls.eliminar_etiqueta_de_nota(usuario)
             elif opcion == "7":
                 if cls.verificar_existencia_notas(usuario):
-                    cls.revertir_cambio_nota(usuario)  # Llamada a la función para revertir un cambio
+                    cls.revertir_cambio_nota(usuario)
             elif opcion == "8":
                 if cls.verificar_existencia_notas(usuario):
-                    cls.ver_historial_nota(usuario)  # Llamada a la función para ver el historial de una nota
-            elif opcion == "9":
+                    cls.ver_historial_nota(usuario)
+            elif opcion == "9":  # Nueva opción para buscar notas por etiqueta
+                if cls.verificar_existencia_notas(usuario):
+                    cls.buscar_notas_por_etiqueta(usuario)
+            elif opcion == "10":
                 print("Volviendo al menú principal...")
                 cls.limpiar_consola()
                 break
@@ -80,6 +84,56 @@ class Nota:
                 print("Opción no válida. Intente de nuevo.")
                 input("Presione Enter para continuar...")
                 cls.limpiar_consola()
+
+    @classmethod
+    def crear_nota(cls, usuario):
+        """Crea una nueva nota para el usuario."""
+        titulo = input("Ingrese el título de la nota: ")
+        contenido = input("Ingrese el contenido de la nota: ")
+
+        # Asignar un nuevo ID único
+        id_nota = cls.generar_id_unico()
+
+        nueva_nota = cls(id_nota, titulo, contenido, usuario)
+        cls.notas[id_nota] = nueva_nota  # Guardar en el diccionario
+        cls.limpiar_consola()
+        print("Nota creada con éxito.")
+        input("Presione Enter para continuar...")
+        cls.limpiar_consola()
+
+    @classmethod
+    def imprimir_notas(cls, usuario):
+        """Imprime las notas del usuario con detalles de ID, título, fecha de creación y modificación."""
+        notas_usuario = [nota for nota in cls.notas.values() if nota.usuario == usuario]
+        if not notas_usuario:
+            return False
+
+        cls.limpiar_consola()
+        print("\n===== Sus Notas =====")
+        for nota in notas_usuario:
+            fecha_creacion = nota.fecha_creacion.strftime("%Y-%m-%d %H:%M:%S")
+            if nota.fecha_modificacion:
+                fecha_modificacion = nota.fecha_modificacion.strftime("%Y-%m-%d %H:%M:%S")
+                print(
+                    f"ID: {nota.id_nota:04}, Título: {nota.titulo}, Creada: {fecha_creacion}, Modificada: {fecha_modificacion}")
+            else:
+                print(f"ID: {nota.id_nota:04}, Título: {nota.titulo}, Creada: {fecha_creacion}")
+        return True
+
+    @classmethod
+    def ver_contenido_nota(cls, usuario):
+        """Permite ver el contenido de una nota específica."""
+        id_nota = cls.obtener_indice_valido(usuario)
+        if id_nota is not None:
+            nota = cls.obtener_nota_por_indice(usuario, id_nota)
+            cls.limpiar_consola()
+            print(f"\nTítulo: {nota.titulo}")
+            print(f"Contenido: {nota.contenido}")
+            print(f"Creada: {nota.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S')}")
+            if nota.fecha_modificacion:
+                print(f"Última modificación: {nota.fecha_modificacion.strftime('%Y-%m-%d %H:%M:%S')}")
+            input("Presione Enter para continuar...")
+            cls.limpiar_consola()
 
     @classmethod
     def editar_nota(cls, usuario):
@@ -122,65 +176,6 @@ class Nota:
             nota.historial.mostrar_historial()  # Llama a HistorialNota para mostrar el historial
 
     @classmethod
-    def verificar_existencia_notas(cls, usuario):
-        """Verifica si el usuario tiene notas y muestra un mensaje si no tiene."""
-        if not cls.imprimir_notas(usuario):
-            print("No tiene notas creadas.")
-            input("Presione Enter para continuar...")
-            cls.limpiar_consola()
-            return False
-        return True
-
-    @classmethod
-    def crear_nota(cls, usuario):
-        """Crea una nueva nota para el usuario."""
-        titulo = input("Ingrese el título de la nota: ")
-        contenido = input("Ingrese el contenido de la nota: ")
-
-        # Asignar un nuevo ID único
-        id_nota = cls.generar_id_unico()
-
-        nueva_nota = cls(id_nota, titulo, contenido, usuario)
-        cls.notas[id_nota] = nueva_nota  # Guardar en el diccionario
-        cls.limpiar_consola()
-        print("Nota creada con éxito.")
-        input("Presione Enter para continuar...")
-        cls.limpiar_consola()
-
-    @classmethod
-    def imprimir_notas(cls, usuario):
-        """Imprime las notas del usuario con detalles de ID, título, fecha de creación y modificación."""
-        notas_usuario = [nota for nota in cls.notas.values() if nota.usuario == usuario]
-        if not notas_usuario:
-            return False
-
-        cls.limpiar_consola()
-        print("\n===== Sus Notas =====")
-        for nota in notas_usuario:
-            fecha_creacion = nota.fecha_creacion.strftime("%Y-%m-%d %H:%M:%S")
-            if nota.fecha_modificacion:
-                fecha_modificacion = nota.fecha_modificacion.strftime("%Y-%m-%d %H:%M:%S")
-                print(f"ID: {nota.id_nota:04}, Título: {nota.titulo}, Creada: {fecha_creacion}, Modificada: {fecha_modificacion}")
-            else:
-                print(f"ID: {nota.id_nota:04}, Título: {nota.titulo}, Creada: {fecha_creacion}")
-        return True
-
-    @classmethod
-    def ver_contenido_nota(cls, usuario):
-        """Permite ver el contenido de una nota específica."""
-        id_nota = cls.obtener_indice_valido(usuario)
-        if id_nota is not None:
-            nota = cls.obtener_nota_por_indice(usuario, id_nota)
-            cls.limpiar_consola()
-            print(f"\nTítulo: {nota.titulo}")
-            print(f"Contenido: {nota.contenido}")
-            print(f"Creada: {nota.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S')}")
-            if nota.fecha_modificacion:
-                print(f"Última modificación: {nota.fecha_modificacion.strftime('%Y-%m-%d %H:%M:%S')}")
-            input("Presione Enter para continuar...")
-            cls.limpiar_consola()
-
-    @classmethod
     def agregar_etiqueta_a_nota(cls, usuario):
         """Permite asignar una etiqueta existente o crear una nueva etiqueta a una nota."""
         id_nota = cls.obtener_indice_valido(usuario)
@@ -219,14 +214,40 @@ class Nota:
 
     @classmethod
     def buscar_notas_por_etiqueta(cls, usuario):
-        """Permite buscar notas filtradas por una etiqueta."""
-        # Mostrar etiquetas existentes
+        """Permite buscar notas filtradas por una etiqueta específica."""
+        # Mostrar etiquetas existentes para que el usuario seleccione
         Etiqueta.mostrar_etiquetas_usuario()
         try:
+            # Solicitar al usuario que ingrese el ID de la etiqueta
             id_etiqueta = int(input("Ingrese el ID de la etiqueta para buscar las notas relacionadas: "))
-            Etiqueta.buscar_notas_por_etiqueta(id_etiqueta)
+            etiqueta = Etiqueta.buscar_etiqueta_por_id(id_etiqueta)
+            if etiqueta:
+                # Filtrar notas asociadas a esta etiqueta
+                notas_filtradas = [nota for nota in cls.notas.values() if
+                                   nota.etiqueta == etiqueta and nota.usuario == usuario]
+
+                # Verificar si hay notas relacionadas
+                if notas_filtradas:
+                    print(f"\nNotas asociadas a la etiqueta '{etiqueta.nombre}':")
+                    for nota in notas_filtradas:
+                        fecha_creacion = nota.fecha_creacion.strftime("%Y-%m-%d %H:%M:%S")
+                        print(f"ID: {nota.id_nota:04}, Título: {nota.titulo}, Creada: {fecha_creacion}")
+                else:
+                    print(f"No hay notas asociadas a la etiqueta '{etiqueta.nombre}'.")
+            else:
+                print("Etiqueta no encontrada.")
         except ValueError:
-            print("ID inválido.")
+            print("ID inválido. Ingrese un número válido.")
+
+    @classmethod
+    def verificar_existencia_notas(cls, usuario):
+        """Verifica si el usuario tiene notas y muestra un mensaje si no tiene."""
+        if not cls.imprimir_notas(usuario):
+            print("No tiene notas creadas.")
+            input("Presione Enter para continuar...")
+            cls.limpiar_consola()
+            return False
+        return True
 
     @classmethod
     def obtener_indice_valido(cls, usuario):
