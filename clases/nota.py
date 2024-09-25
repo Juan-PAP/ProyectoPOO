@@ -3,6 +3,7 @@ import os
 from clases.historial import HistorialNota
 from clases.etiqueta import Etiqueta
 
+
 class Nota:
     """Clase principal para la gestión de notas."""
     notas = {}  # Diccionario de todas las notas (ID -> Nota)
@@ -41,7 +42,7 @@ class Nota:
             print("6. Eliminar etiqueta de nota")
             print("7. Revertir cambios en una nota")
             print("8. Ver historial de modificaciones")
-            print("9. Buscar notas por etiqueta")  # Nueva opción para buscar notas por etiqueta
+            print("9. Buscar notas por etiqueta")
             print("10. Volver al menú principal")
 
             opcion = input("Seleccione una opción: ")
@@ -234,6 +235,10 @@ class Nota:
                         print(f"ID: {nota.id_nota:04}, Título: {nota.titulo}, Creada: {fecha_creacion}")
                 else:
                     print(f"No hay notas asociadas a la etiqueta '{etiqueta.nombre}'.")
+
+                # Pausa para permitir al usuario ver el resultado antes de continuar
+                input("Presione Enter para continuar...")
+
             else:
                 print("Etiqueta no encontrada.")
         except ValueError:

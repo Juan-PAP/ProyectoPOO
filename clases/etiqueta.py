@@ -88,7 +88,7 @@ class Etiqueta:
 
     @classmethod
     def buscar_notas_por_etiqueta(cls, id_etiqueta):
-        """Muestra todas las notas relacionadas con una etiqueta específica."""
+        """Busca notas asociadas a una etiqueta por su ID."""
         etiqueta = cls.buscar_etiqueta_por_id(id_etiqueta)
         if etiqueta:
             if etiqueta.notas_asociadas:
